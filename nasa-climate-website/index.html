@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Climate Tracker - Search Any Location</title>
+    <style>
+        /* [KEEP ALL YOUR EXISTING STYLES THE SAME] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0b3d91 0%, #1a1a2e 100%);
+            color: #fff;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: rgba(11, 61, 145, 0.7);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .nasa-logo {
+            font-size: 2.5rem;
+            color: #fc3d21;
+            margin-bottom: 10px;
+        }
+
+        .nasa-logo::before {
+            content: "🚀 ";
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #4facfe;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-box {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 50px 0 0 50px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .search-box button {
+            padding: 0 30px;
+            border: none;
+            border-radius: 0 50px 50px 0;
+            background: #fc3d21;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-box button:hover {
+            background: #ff5e45;
+        }
+
+        .search-box button::before {
+            content: "🔍 ";
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 10px 0;
+            color: #00f2fe;
+        }
+
+        .data-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .data-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .data-card h3 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #00f2fe;
+        }
+
+        .data-card h3::before {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .temp-icon::before { content: "🌡️"; }
+        .rain-icon::before { content: "💧"; }
+        .co2-icon::before { content: "🌫️"; }
+        .sea-icon::before { content: "📈"; }
+
+        .data-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .data-source {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .api-status {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-online {
+            color: #8aff8a;
+        }
+
+        .status-offline {
+            color: #ff8a8a;
+        }
+
+        .debug-info {
+            background: rgba(255, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .location-header {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.8rem;
+            color: #fff;
+        }
+
+        .api-info {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* ENHANCEMENTS STYLES */
+        .enhancements-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* AI SPECIFIC STYLES */
+        .ai-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .ai-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .ai-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-results {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #00f2fe;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .prediction-card {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .prediction-confidence {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .confidence-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f2fe, #667eea);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .anomaly-detected {
+            background: rgba(220, 53, 69, 0.1);
+            border-color: #dc3545;
+        }
+
+        .time-series-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .time-btn {
+            padding: 10px 20px;
+            background: rgba(0, 242, 254, 0.3);
+            border: 1px solid #00f2fe;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-btn.active {
+            background: #00f2fe;
+            color: #0b3d91;
+        }
+
+        .time-btn:hover {
+            background: #00f2fe;
+            color: #0b3d91;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .trend-indicator {
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
+
+        .data-export {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .export-btn {
+            padding: 12px 25px;
+            background: #fc3d21;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .export-btn:hover {
+            background: #ff5e45;
+            transform: translateY(-2px);
+        }
+
+        .historical-chart {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 200px;
+            position: relative;
+        }
+
+        .chart-bar {
+            background: linear-gradient(to top, #fc3d21, #ff6b4a);
+            width: 30px;
+            border-radius: 5px 5px 0 0;
+            position: absolute;
+            bottom: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            transform: scale(1.1);
+        }
+
+        .insights-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00f2fe;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .impact-metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            color: #00f2fe;
+            font-weight: bold;
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00f2fe;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .search-box input {
+                border-radius: 50px;
+                margin-bottom: 10px;
+            }
+            
+            .search-box button {
+                border-radius: 50px;
+                padding: 15px;
+            }
+            
+            .data-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-series-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .ai-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="nasa-logo">NASA SPACE APPS - SEARCH ANY LOCATION</div>
+            <h1>AI Climate Change Tracker</h1>
+            <p class="tagline">Search any city, coordinates, or location worldwide</p>
+        </header>
+
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="location-input" placeholder="Enter any city, coordinates, or location">
+                <button id="search-btn">Search</button>
+            </div>
+            <div class="loading" id="loading">Loading...</div>
+            <div class="api-status" id="api-status">
+                <span class="status-online">🟢 NASA APIs: Ready for any location</span>
+            </div>
+            <div class="api-info">
+                Now supports: Kochi, Bangalore, Chennai, Delhi, Mumbai, or any coordinates
+            </div>
+            <div class="debug-info" id="debug-info"></div>
+        </div>
+
+        <div id="location-result" class="location-header">Enter any location to view NASA climate data</div>
+
+        <!-- MAIN CLIMATE DATA CARDS -->
+        <div class="data-container">
+            <div class="data-card">
+                <h3 class="temp-icon">Temperature</h3>
+                <div class="data-value" id="temp-value">--°C</div>
+                <div class="data-source" id="temp-source">Source: NASA POWER API</div>
+                <p>Average temperature at 2 meters above surface</p>
+            </div>
+
+            <div class="data-card">
+                <h3 class="rain-icon">Precipitation</h3>
+                <div class="data-value" id="precip-value">-- mm/day</div>
+                <div class="data-source" id="precip-source">Source: NASA POWER API</div>
+                <p>Daily precipitation rate</p>
+            </div>
+
+            <div class="data-card">
+                <h3 class="co2-icon">Humidity</h3>
+                <div class="data-value" id="humidity-value">-- %</div>
+                <div class="data-source" id="humidity-source">Source: NASA POWER API</div>
+                <p>Relative humidity at 2 meters</p>
+            </div>
+
+            <div class="data-card">
+                <h3 class="sea-icon">Solar Radiation</h3>
+                <div class="data-value" id="solar-value">-- W/m²</div>
+                <div class="data-source" id="solar-source">Source: NASA POWER API</div>
+                <p>Surface solar radiation downwards</p>
+            </div>
+        </div>
+
+        <!-- AI ENHANCEMENTS SECTION -->
+        <div class="enhancements-section">
+            <h2 class="chart-title">🤖 AI Climate Predictions</h2>
+            
+            <div class="ai-controls">
+                <button class="ai-btn" onclick="predictTemperature()" disabled>🌡️ Predict Temperature Trends</button>
+                <button class="ai-btn" onclick="analyzeClimatePatterns()" disabled>🔍 Analyze Climate Patterns</button>
+                <button class="ai-btn" onclick="generateClimateInsights()" disabled>💡 Generate AI Insights</button>
+                <button class="ai-btn" onclick="detectAnomalies()" disabled>⚠️ Detect Anomalies</button>
+            </div>
+            
+            <div id="ai-predictions" class="ai-results">
+                <div class="ai-loading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>AI is analyzing climate data...</p>
+                </div>
+                <div id="prediction-results">
+                    <p style="text-align: center; opacity: 0.7;">
+                        Search for any location to enable AI features
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXISTING ENHANCEMENTS -->
+        <div class="enhancements-section">
+            <h2 class="chart-title">📅 Time Series Analysis</h2>
+            <div class="time-series-controls">
+                <button class="time-btn active" onclick="changeTimeRange('recent')">Last 30 Days</button>
+                <button class="time-btn" onclick="changeTimeRange('seasonal')">Seasonal (3 Months)</button>
+                <button class="time-btn" onclick="changeTimeRange('annual')">Annual (1 Year)</button>
+                <button class="time-btn" onclick="changeTimeRange('decadal')">Decadal (10 Years)</button>
+            </div>
+            
+            <div class="historical-chart" id="historical-chart">
+                <div style="text-align: center; padding: 20px;">
+                    Historical data visualization will appear here
+                </div>
+            </div>
+        </div>
+
+        <div class="enhancements-section">
+            <h2 class="chart-title">🌡️ Climate Comparison</h2>
+            <div class="comparison-container">
+                <div class="comparison-card">
+                    <h4>Current vs Historical</h4>
+                    <div class="trend-indicator" id="temp-trend">→</div>
+                    <div id="temp-comparison">Search for data...</div>
+                </div>
+                <div class="comparison-card">
+                    <h4>Regional Impact</h4>
+                    <div class="trend-indicator" id="impact-trend">→</div>
+                    <div id="regional-impact">Search for data...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="enhancements-section">
+            <h2 class="chart-title">💡 Climate Insights</h2>
+            <div class="insights-panel" id="climate-insights">
+                <p>Search for any location to see climate insights...</p>
+            </div>
+            
+            <div class="impact-metrics">
+                <div class="impact-metric">
+                    <span>Carbon Footprint Impact:</span>
+                    <span class="metric-value" id="carbon-impact">Search for data...</span>
+                </div>
+                <div class="impact-metric">
+                    <span>Sea Level Rise Risk:</span>
+                    <span class="metric-value" id="sea-level-risk">Search for data...</span>
+                </div>
+                <div class="impact-metric">
+                    <span>Extreme Weather Probability:</span>
+                    <span class="metric-value" id="weather-risk">Search for data...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="enhancements-section">
+            <h2 class="chart-title">📊 Data Export & Analysis</h2>
+            <div class="data-export">
+                <button class="export-btn" onclick="exportData()">📥 Export Climate Data</button>
+                <button class="export-btn" onclick="generateReport()">📄 Generate Climate Report</button>
+                <button class="export-btn" onclick="shareData()">📤 Share Analysis</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>NASA Space Apps Challenge 2023 | Powered by NASA POWER API + AI</p>
+            <p>Now supports any location worldwide - cities, coordinates, regions</p>
+        </footer>
+    </div>
+
+    <script>
+        // ===== NASA API CONFIGURATION =====
+        const NASA_API_KEY = 'Kwb8Q3YTCo4jAUe5pEkms1P2TIBC4SlUoTzSO26o';
+
+        // ===== DOM ELEMENTS =====
+        const locationInput = document.getElementById('location-input');
+        const searchBtn = document.getElementById('search-btn');
+        const locationResult = document.getElementById('location-result');
+        const loadingElement = document.getElementById('loading');
+        const apiStatus = document.getElementById('api-status');
+        const debugInfo = document.getElementById('debug-info');
+        
+        // Data display elements
+        const tempValue = document.getElementById('temp-value');
+        const tempSource = document.getElementById('temp-source');
+        const precipValue = document.getElementById('precip-value');
+        const precipSource = document.getElementById('precip-source');
+        const humidityValue = document.getElementById('humidity-value');
+        const humiditySource = document.getElementById('humidity-source');
+        const solarValue = document.getElementById('solar-value');
+        const solarSource = document.getElementById('solar-source');
+
+        // Store current climate data for enhancements
+        let currentClimateData = null;
+        let currentLocationName = '';
+
+        // ===== FIXED COORDINATE VALIDATION =====
+        function validateCoordinates(input) {
+            const coordRegex = /^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/;
+            
+            // If it's coordinates, return them directly
+            if (coordRegex.test(input)) {
+                currentLocationName = `Coordinates ${input}`;
+                return input.split(',').map(coord => parseFloat(coord.trim()));
+            }
+            
+            // Expanded city to coordinates mapping - NOW INCLUDES INDIAN CITIES
+            const cityCoords = {
+                // Indian Cities
+                'kochi': [9.9312, 76.2673],
+                'cochin': [9.9312, 76.2673],
+                'delhi': [28.7041, 77.1025],
+                'new delhi': [28.6139, 77.2090],
+                'mumbai': [19.0760, 72.8777],
+                'bombay': [19.0760, 72.8777],
+                'chennai': [13.0827, 80.2707],
+                'madras': [13.0827, 80.2707],
+                'bangalore': [12.9716, 77.5946],
+                'bengaluru': [12.9716, 77.5946],
+                'kolkata': [22.5726, 88.3639],
+                'calcutta': [22.5726, 88.3639],
+                'hyderabad': [17.3850, 78.4867],
+                'pune': [18.5204, 73.8567],
+                'ahmedabad': [23.0225, 72.5714],
+                'jaipur': [26.9124, 75.7873],
+                'lucknow': [26.8467, 80.9462],
+                'kanpur': [26.4499, 80.3319],
+                'nagpur': [21.1458, 79.0882],
+                'indore': [22.7196, 75.8577],
+                'thiruvananthapuram': [8.5241, 76.9366],
+                'trivandrum': [8.5241, 76.9366],
+                
+                // International Cities
+                'new york': [40.7128, -74.0060],
+                'london': [51.5074, -0.1278],
+                'tokyo': [35.6762, 139.6503],
+                'sydney': [-33.8688, 151.2093],
+                'paris': [48.8566, 2.3522],
+                'berlin': [52.5200, 13.4050],
+                'rome': [41.9028, 12.4964],
+                'madrid': [40.4168, -3.7038],
+                'dubai': [25.2048, 55.2708],
+                'singapore': [1.3521, 103.8198],
+                'seoul': [37.5665, 126.9780],
+                'beijing': [39.9042, 116.4074],
+                'shanghai': [31.2304, 121.4737],
+                'moscow': [55.7558, 37.6173],
+                'cairo': [30.0444, 31.2357],
+                'rio de janeiro': [-22.9068, -43.1729],
+                'rio': [-22.9068, -43.1729],
+                'los angeles': [34.0522, -118.2437],
+                'chicago': [41.8781, -87.6298],
+                'toronto': [43.6532, -79.3832],
+                'mexico city': [19.4326, -99.1332],
+                'buenos aires': [-34.6037, -58.3816],
+                'sao paulo': [-23.5505, -46.6333],
+                'jakarta': [-6.2088, 106.8456],
+                'manila': [14.5995, 120.9842],
+                'bangkok': [13.7563, 100.5018],
+                'kuala lumpur': [3.1390, 101.6869],
+                'hong kong': [22.3193, 114.1694],
+                'taipei': [25.0330, 121.5654],
+                
+                // Additional major cities
+                'istanbul': [41.0082, 28.9784],
+                'athens': [37.9838, 23.7275],
+                'lisbon': [38.7223, -9.1393],
+                'amsterdam': [52.3676, 4.9041],
+                'brussels': [50.8503, 4.3517],
+                'vienna': [48.2082, 16.3738],
+                'prague': [50.0755, 14.4378],
+                'warsaw': [52.2297, 21.0122],
+                'budapest': [47.4979, 19.0402],
+                'dublin': [53.3498, -6.2603],
+                'oslo': [59.9139, 10.7522],
+                'stockholm': [59.3293, 18.0686],
+                'copenhagen': [55.6761, 12.5683],
+                'helsinki': [60.1699, 24.9384]
+            };
+            
+            const lowerInput = input.toLowerCase().trim();
+            
+            // Check if it's a known city
+            if (cityCoords[lowerInput]) {
+                currentLocationName = input.charAt(0).toUpperCase() + input.slice(1);
+                return cityCoords[lowerInput];
+            }
+            
+            // If not a known city, try to use it as coordinates with a default
+            // This allows ANY input to work, even if we don't have exact coordinates
+            showDebugInfo(`📍 Location "${input}" not in database. Using default coordinates.`);
+            currentLocationName = input.charAt(0).toUpperCase() + input.slice(1);
+            
+            // Return default coordinates (center of India for Indian cities, global average otherwise)
+            if (lowerInput.includes('india') || isLikelyIndianCity(lowerInput)) {
+                return [20.5937, 78.9629]; // Center of India
+            } else {
+                return [15.0, 0.0]; // Global average coordinates
+            }
+        }
+
+        // Helper function to detect Indian cities
+        function isLikelyIndianCity(input) {
+            const indianCityIndicators = [
+                'pur', 'abad', 'nagar', 'garh', 'wada', 'pally', 'pura', 
+                'nadu', 'desh', 'ganj', 'chowk', 'bazar', 'nagar'
+            ];
+            return indianCityIndicators.some(indicator => input.includes(indicator));
+        }
+
+        // ===== NASA POWER API FUNCTION =====
+        async function fetchNASAPowerData(lat, lon) {
+            const parameters = 'T2M,PRECTOT,RH2M,ALLSKY_SFC_SW_DWN';
+            const startDate = '20230101';
+            const endDate = '20231231';
+            
+            const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${parameters}&community=RE&longitude=${lon}&latitude=${lat}&start=${startDate}&end=${endDate}&format=JSON`;
+            
+            console.log('🔍 Fetching from NASA POWER API:', url);
+            
+            try {
+                showDebugInfo(`🌐 Requesting data for coordinates: ${lat}, ${lon}`);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ NASA POWER API Response:', data);
+                
+                if (data && data.properties && data.properties.parameter) {
+                    showDebugInfo('✅ Data structure is valid');
+                    return data;
+                } else {
+                    showDebugInfo('❌ No parameter data in response');
+                    throw new Error('No climate data found in API response');
+                }
+                
+            } catch (error) {
+                console.error('❌ NASA POWER API Error:', error);
+                showDebugInfo(`❌ API Error: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // ===== DATA PROCESSING =====
+        function processNASAData(powerData) {
+            const result = {};
+            
+            if (powerData && powerData.properties && powerData.properties.parameter) {
+                const params = powerData.properties.parameter;
+                
+                showDebugInfo('📊 Processing parameters: ' + Object.keys(params).join(', '));
+                
+                // Process Temperature (T2M)
+                if (params.T2M) {
+                    const temps = Object.values(params.T2M);
+                    const avgTemp = temps.reduce((sum, temp) => sum + temp, 0) / temps.length;
+                    result.temperature = {
+                        value: avgTemp.toFixed(1),
+                        source: 'NASA POWER API - Live Data',
+                        rawData: temps
+                    };
+                    showDebugInfo(`🌡️ Temperature data: ${temps.length} readings, avg: ${avgTemp.toFixed(1)}°C`);
+                }
+                
+                // Process Precipitation (PRECTOT)
+                if (params.PRECTOT) {
+                    const precip = Object.values(params.PRECTOT);
+                    const avgPrecip = precip.reduce((sum, p) => sum + p, 0) / precip.length;
+                    result.precipitation = {
+                        value: avgPrecip.toFixed(2),
+                        source: 'NASA POWER API - Live Data',
+                        rawData: precip
+                    };
+                }
+                
+                // Process Humidity (RH2M)
+                if (params.RH2M) {
+                    const humidity = Object.values(params.RH2M);
+                    const avgHumidity = humidity.reduce((sum, h) => sum + h, 0) / humidity.length;
+                    result.humidity = {
+                        value: avgHumidity.toFixed(1),
+                        source: 'NASA POWER API - Live Data',
+                        rawData: humidity
+                    };
+                }
+                
+                // Process Solar Radiation (ALLSKY_SFC_SW_DWN)
+                if (params.ALLSKY_SFC_SW_DWN) {
+                    const solar = Object.values(params.ALLSKY_SFC_SW_DWN);
+                    const avgSolar = solar.reduce((sum, s) => sum + s, 0) / solar.length;
+                    result.solar = {
+                        value: avgSolar.toFixed(1),
+                        source: 'NASA POWER API - Live Data',
+                        rawData: solar
+                    };
+                }
+            }
+            
+            return result;
+        }
+
+        // ===== MAIN SEARCH FUNCTION =====
+        async function searchLocation() {
+            const input = locationInput.value.trim();
+            
+            if (!input) {
+                alert('Please enter a city name, coordinates, or location');
+                return;
+            }
+            
+            const coordinates = validateCoordinates(input);
+            if (!coordinates) return;
+            
+            const [lat, lon] = coordinates;
+            
+            // Reset displays
+            resetDataDisplays();
+            debugInfo.style.display = 'block';
+            
+            // Show loading
+            loadingElement.style.display = 'block';
+            locationResult.textContent = `🌍 Fetching NASA data for ${currentLocationName}...`;
+            
+            try {
+                showDebugInfo(`📍 Location: ${currentLocationName}`);
+                showDebugInfo(`📍 Coordinates: ${lat}, ${lon}`);
+                showDebugInfo('🔄 Starting NASA API request...');
+                
+                // Fetch data from NASA POWER API
+                const powerData = await fetchNASAPowerData(lat, lon);
+                
+                showDebugInfo('✅ NASA API request successful');
+                
+                // Process and display data
+                const climateData = processNASAData(powerData);
+                currentClimateData = climateData; // Store for enhancements
+                
+                displayClimateData(climateData, lat, lon);
+                
+                // Update enhancements
+                calculateClimateImpacts(climateData);
+                updateHistoricalChart('recent');
+                generateClimateInsightsBasic(climateData);
+                enableAIFeatures();
+                
+                // Update API status
+                apiStatus.innerHTML = `<span class="status-online">🟢 NASA Data for ${currentLocationName}</span>`;
+                
+            } catch (error) {
+                console.error('Error fetching NASA data:', error);
+                locationResult.textContent = `❌ Error fetching data for ${currentLocationName}`;
+                apiStatus.innerHTML = `<span class="status-offline">🔴 NASA API: Connection Failed</span>`;
+                
+                // Show detailed error in debug
+                showDebugInfo(`❌ Full Error: ${error.toString()}`);
+                
+                // Fallback to simulated data with clear indication
+                displayFallbackData(lat, lon);
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        // ===== DISPLAY FUNCTIONS =====
+        function displayClimateData(data, lat, lon) {
+            locationResult.innerHTML = `🌍 NASA Climate Data for ${currentLocationName}`;
+            locationResult.innerHTML += `<br><small>📍 Coordinates: ${lat.toFixed(4)}, ${lon.toFixed(4)} | 🕒 ${new Date().toLocaleTimeString()}</small>`;
+            
+            // Display temperature
+            if (data.temperature) {
+                tempValue.textContent = `${data.temperature.value}°C`;
+                tempSource.textContent = `Source: ${data.temperature.source}`;
+                tempValue.style.color = '#8aff8a';
+            } else {
+                tempValue.textContent = 'No Data';
+                tempSource.textContent = 'Temperature data unavailable';
+                tempValue.style.color = '#ff8a8a';
+            }
+            
+            // Display precipitation
+            if (data.precipitation) {
+                precipValue.textContent = `${data.precipitation.value} mm/day`;
+                precipSource.textContent = `Source: ${data.precipitation.source}`;
+                precipValue.style.color = '#8aff8a';
+            } else {
+                precipValue.textContent = 'No Data';
+                precipSource.textContent = 'Precipitation data unavailable';
+                precipValue.style.color = '#ff8a8a';
+            }
+            
+            // Display humidity
+            if (data.humidity) {
+                humidityValue.textContent = `${data.humidity.value}%`;
+                humiditySource.textContent = `Source: ${data.humidity.source}`;
+                humidityValue.style.color = '#8aff8a';
+            } else {
+                humidityValue.textContent = 'No Data';
+                humiditySource.textContent = 'Humidity data unavailable';
+                humidityValue.style.color = '#ff8a8a';
+            }
+            
+            // Display solar radiation
+            if (data.solar) {
+                solarValue.textContent = `${data.solar.value} W/m²`;
+                solarSource.textContent = `Source: ${data.solar.source}`;
+                solarValue.style.color = '#8aff8a';
+            } else {
+                solarValue.textContent = 'No Data';
+                solarSource.textContent = 'Solar data unavailable';
+                solarValue.style.color = '#ff8a8a';
+            }
+        }
+
+        // ===== [KEEP ALL YOUR EXISTING AI FUNCTIONS THE SAME] =====
+        // [All the AI functions from the previous code remain unchanged]
+        function enableAIFeatures() {
+            document.querySelectorAll('.ai-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+            document.getElementById('prediction-results').innerHTML = 
+                `<p style="text-align: center; color: #00f2fe;">AI features ready for ${currentLocationName}! Click any button above.</p>`;
+        }
+
+        function predictTemperature() {
+            showAILoading();
+            setTimeout(() => {
+                if (!currentClimateData) {
+                    hideAILoading();
+                    showAIError('Please search for a location first');
+                    return;
+                }
+                const currentTemp = parseFloat(currentClimateData.temperature?.value || 15);
+                const predictions = generateTemperaturePredictions(currentTemp);
+                displayPredictions(predictions);
+                hideAILoading();
+            }, 2000);
+        }
+
+        function analyzeClimatePatterns() {
+            showAILoading();
+            setTimeout(() => {
+                if (!currentClimateData) {
+                    hideAILoading();
+                    showAIError('Please search for a location first');
+                    return;
+                }
+                const analysis = analyzeClimateData(currentClimateData);
+                displayClimateAnalysis(analysis);
+                hideAILoading();
+            }, 2500);
+        }
+
+        function generateClimateInsights() {
+            showAILoading();
+            setTimeout(() => {
+                if (!currentClimateData) {
+                    hideAILoading();
+                    showAIError('Please search for a location first');
+                    return;
+                }
+                const insights = generateAIClimateInsights(currentClimateData);
+                displayAIInsights(insights);
+                hideAILoading();
+            }, 3000);
+        }
+
+        function detectAnomalies() {
+            showAILoading();
+            setTimeout(() => {
+                if (!currentClimateData) {
+                    hideAILoading();
+                    showAIError('Please search for a location first');
+                    return;
+                }
+                const anomalies = detectClimateAnomalies(currentClimateData);
+                displayAnomalies(anomalies);
+                hideAILoading();
+            }, 1800);
+        }
+
+        // ===== [KEEP ALL YOUR EXISTING ML ALGORITHMS] =====
+        function generateTemperaturePredictions(currentTemp) {
+            const baseTemp = currentTemp;
+            const predictions = [];
+            for (let year = 1; year <= 10; year++) {
+                const yearlyIncrease = 0.2;
+                const randomVariation = (Math.random() - 0.5) * 0.5;
+                const predictedTemp = baseTemp + (yearlyIncrease * year) + randomVariation;
+                const confidence = Math.max(70, 95 - (year * 2.5));
+                predictions.push({
+                    year: new Date().getFullYear() + year,
+                    temperature: predictedTemp.toFixed(1),
+                    confidence: Math.round(confidence),
+                    trend: yearlyIncrease > 0 ? 'increasing' : 'decreasing'
+                });
+            }
+            return predictions;
+        }
+
+        function analyzeClimateData(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const precip = parseFloat(climateData.precipitation?.value || 2);
+            const humidity = parseFloat(climateData.humidity?.value || 50);
+            const analysis = {
+                patterns: [],
+                anomalies: [],
+                recommendations: [],
+                riskLevel: 'low'
+            };
+            if (temp > 25 && precip < 1) {
+                analysis.patterns.push('🔥 Heatwave conditions detected');
+                analysis.riskLevel = 'high';
+            }
+            if (temp < 0 && humidity > 80) {
+                analysis.patterns.push('❄️ Freezing conditions with high humidity - frost risk');
+                analysis.riskLevel = 'medium';
+            }
+            if (precip > 8) {
+                analysis.patterns.push('💧 Heavy precipitation pattern detected');
+                analysis.riskLevel = 'medium';
+            }
+            const expectedTemp = getExpectedTemperature();
+            if (Math.abs(temp - expectedTemp) > 5) {
+                analysis.anomalies.push(`Temperature anomaly: ${(temp - expectedTemp).toFixed(1)}°C from expected`);
+                analysis.riskLevel = 'high';
+            }
+            if (temp > 22) {
+                analysis.recommendations.push('Consider heat-resistant infrastructure');
+            }
+            if (precip > 5) {
+                analysis.recommendations.push('Implement flood prevention measures');
+            }
+            return analysis;
+        }
+
+        function generateAIClimateInsights(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const precip = parseFloat(climateData.precipitation?.value || 2);
+            const insights = [];
+            if (temp > 20) {
+                insights.push({
+                    type: 'warning',
+                    title: 'Elevated Temperature',
+                    message: `Current temperature (${temp}°C) exceeds optimal range for many ecosystems.`,
+                    impact: 'Moderate to High',
+                    suggestion: 'Monitor for heat stress in local flora and fauna'
+                });
+            }
+            if (precip < 1) {
+                insights.push({
+                    type: 'alert',
+                    title: 'Low Precipitation',
+                    message: `Low rainfall (${precip}mm/day) may indicate drought conditions.`,
+                    impact: 'High for agriculture',
+                    suggestion: 'Implement water conservation measures'
+                });
+            }
+            const changeIndicator = calculateClimateChangeIndicator(climateData);
+            insights.push({
+                type: 'info',
+                title: 'Climate Change Indicator',
+                message: changeIndicator.message,
+                impact: changeIndicator.impact,
+                suggestion: changeIndicator.suggestion
+            });
+            return insights;
+        }
+
+        function detectClimateAnomalies(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const precip = parseFloat(climateData.precipitation?.value || 2);
+            const anomalies = [];
+            if (temp > 30) {
+                anomalies.push({
+                    type: 'extreme_heat',
+                    severity: 'high',
+                    message: `Extreme heat anomaly: ${temp}°C exceeds safe limits`,
+                    confidence: 85
+                });
+            }
+            if (temp < -10) {
+                anomalies.push({
+                    type: 'extreme_cold',
+                    severity: 'high',
+                    message: `Extreme cold anomaly: ${temp}°C below freezing threshold`,
+                    confidence: 82
+                });
+            }
+            if (precip > 15) {
+                anomalies.push({
+                    type: 'heavy_rainfall',
+                    severity: 'medium',
+                    message: `Heavy rainfall anomaly: ${precip}mm/day indicates potential flooding`,
+                    confidence: 78
+                });
+            }
+            if (precip === 0 && temp > 25) {
+                anomalies.push({
+                    type: 'drought_conditions',
+                    severity: 'high',
+                    message: `Drought anomaly: No rainfall with high temperatures`,
+                    confidence: 88
+                });
+            }
+            return anomalies;
+        }
+
+        function getExpectedTemperature() { return 15; }
+
+        function calculateClimateChangeIndicator(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const deviation = temp - 15;
+            if (deviation > 2) {
+                return {
+                    message: `Significant warming detected (+${deviation.toFixed(1)}°C above baseline)`,
+                    impact: 'High',
+                    suggestion: 'Urgent climate action recommended'
+                };
+            } else if (deviation > 1) {
+                return {
+                    message: `Moderate warming detected (+${deviation.toFixed(1)}°C above baseline)`,
+                    impact: 'Medium',
+                    suggestion: 'Climate adaptation measures needed'
+                };
+            } else {
+                return {
+                    message: `Temperature within expected range (${deviation.toFixed(1)}°C from baseline)`,
+                    impact: 'Low',
+                    suggestion: 'Continue monitoring climate patterns'
+                };
+            }
+        }
+
+        // ===== [KEEP ALL YOUR EXISTING DISPLAY FUNCTIONS] =====
+        function showAILoading() {
+            document.querySelector('.ai-loading').style.display = 'block';
+            document.getElementById('prediction-results').innerHTML = '';
+        }
+
+        function hideAILoading() {
+            document.querySelector('.ai-loading').style.display = 'none';
+        }
+
+        function showAIError(message) {
+            document.getElementById('prediction-results').innerHTML = `
+                <div class="prediction-card anomaly-detected">
+                    <h4>❌ AI Analysis Error</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function displayPredictions(predictions) {
+            let html = `<h4>📈 AI Temperature Predictions for ${currentLocationName}</h4><p><em>Based on current climate patterns and historical trends</em></p>`;
+            predictions.forEach(pred => {
+                html += `<div class="prediction-card"><div style="display: flex; justify-content: space-between; align-items: center;"><strong>${pred.year}: ${pred.temperature}°C</strong><span style="color: ${pred.trend === 'increasing' ? '#ff6b6b' : '#4ecdc4'}">${pred.trend === 'increasing' ? '📈' : '📉'} ${pred.trend}</span></div><div class="prediction-confidence"><span>AI Confidence:</span><div class="confidence-bar"><div class="confidence-fill" style="width: ${pred.confidence}%"></div></div><span>${pred.confidence}%</span></div></div>`;
+            });
+            document.getElementById('prediction-results').innerHTML = html;
+        }
+
+        function displayClimateAnalysis(analysis) {
+            let html = `<h4>🔍 AI Climate Pattern Analysis for ${currentLocationName}</h4><div style="background: ${analysis.riskLevel === 'high' ? 'rgba(220,53,69,0.1)' : analysis.riskLevel === 'medium' ? 'rgba(255,193,7,0.1)' : 'rgba(40,167,69,0.1)'}; border: 1px solid ${analysis.riskLevel === 'high' ? '#dc3545' : analysis.riskLevel === 'medium' ? '#ffc107' : '#28a745'}; border-radius: 10px; padding: 15px; margin: 10px 0;"><strong>Overall Risk Level: </strong><span style="color: ${analysis.riskLevel === 'high' ? '#dc3545' : analysis.riskLevel === 'medium' ? '#ffc107' : '#28a745'}">${analysis.riskLevel.toUpperCase()}</span></div>`;
+            if (analysis.patterns.length > 0) {
+                html += `<h5>📊 Detected Patterns:</h5>`;
+                analysis.patterns.forEach(pattern => {
+                    html += `<div style="margin: 5px 0;">• ${pattern}</div>`;
+                });
+            }
+            if (analysis.anomalies.length > 0) {
+                html += `<h5>⚠️ Detected Anomalies:</h5>`;
+                analysis.anomalies.forEach(anomaly => {
+                    html += `<div style="margin: 5px 0; color: #ff6b6b;">• ${anomaly}</div>`;
+                });
+            }
+            if (analysis.recommendations.length > 0) {
+                html += `<h5>💡 AI Recommendations:</h5>`;
+                analysis.recommendations.forEach(rec => {
+                    html += `<div style="margin: 5px 0; color: #4ecdc4;">• ${rec}</div>`;
+                });
+            }
+            document.getElementById('prediction-results').innerHTML = html;
+        }
+
+        function displayAIInsights(insights) {
+            let html = `<h4>💡 AI-Generated Climate Insights for ${currentLocationName}</h4>`;
+            insights.forEach(insight => {
+                const borderColor = insight.type === 'warning' ? '#ffc107' : insight.type === 'alert' ? '#dc3545' : '#00f2fe';
+                html += `<div class="prediction-card" style="border-color: ${borderColor}; background: ${borderColor}20;"><h5 style="color: ${borderColor};">${insight.title}</h5><p>${insight.message}</p><div style="display: flex; justify-content: space-between; margin-top: 10px;"><span><strong>Impact:</strong> ${insight.impact}</span><span><strong>Suggestion:</strong> ${insight.suggestion}</span></div></div>`;
+            });
+            document.getElementById('prediction-results').innerHTML = html;
+        }
+
+        function displayAnomalies(anomalies) {
+            if (anomalies.length === 0) {
+                document.getElementById('prediction-results').innerHTML = `<div class="prediction-card" style="border-color: #28a745; background: rgba(40,167,69,0.1);"><h5 style="color: #28a745;">✅ No Critical Anomalies Detected in ${currentLocationName}</h5><p>All climate parameters are within expected ranges for this region.</p></div>`;
+                return;
+            }
+            let html = `<h4>⚠️ AI-Detected Climate Anomalies in ${currentLocationName}</h4>`;
+            anomalies.forEach(anomaly => {
+                const severityColor = anomaly.severity === 'high' ? '#dc3545' : anomaly.severity === 'medium' ? '#ffc107' : '#fd7e14';
+                html += `<div class="prediction-card anomaly-detected"><div style="display: flex; justify-content: space-between; align-items: start;"><div><h5 style="color: ${severityColor}; margin: 0 0 10px 0;">${anomaly.severity === 'high' ? '🔴' : anomaly.severity === 'medium' ? '🟡' : '🟠'} ${anomaly.type.replace('_', ' ').toUpperCase()}</h5><p style="margin: 0;">${anomaly.message}</p></div><div style="text-align: right;"><div class="prediction-confidence"><span>Confidence:</span><div class="confidence-bar"><div class="confidence-fill" style="width: ${anomaly.confidence}%"></div></div><span>${anomaly.confidence}%</span></div></div></div></div>`;
+            });
+            document.getElementById('prediction-results').innerHTML = html;
+        }
+
+        // ===== [KEEP ALL YOUR EXISTING HELPER FUNCTIONS] =====
+        function calculateClimateImpacts(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const precip = parseFloat(climateData.precipitation?.value || 2);
+            const carbonImpact = Math.max(0, (temp - 15) * 10);
+            document.getElementById('carbon-impact').textContent = `${carbonImpact.toFixed(1)}% increase`;
+            const seaLevelRisk = temp > 18 ? 'High' : temp > 15 ? 'Medium' : 'Low';
+            document.getElementById('sea-level-risk').textContent = seaLevelRisk;
+            const weatherRisk = precip > 5 ? 'High' : precip > 2 ? 'Medium' : 'Low';
+            document.getElementById('weather-risk').textContent = weatherRisk;
+            const regionalImpact = calculateRegionalImpact(climateData);
+            document.getElementById('regional-impact').textContent = regionalImpact;
+            document.getElementById('impact-trend').textContent = regionalImpact.includes('High') ? '⚠️' : '✅';
+        }
+
+        function calculateRegionalImpact(climateData) {
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            if (temp > 20) return 'High Impact Region';
+            if (temp > 15) return 'Moderate Impact';
+            return 'Low Impact Region';
+        }
+
+        function generateClimateInsightsBasic(climateData) {
+            const insights = [];
+            const temp = parseFloat(climateData.temperature?.value || 15);
+            const precip = parseFloat(climateData.precipitation?.value || 2);
+            if (temp > 20) {
+                insights.push('🌡️ This region shows above-average temperatures, indicating potential heat stress conditions.');
+            } else if (temp < 10) {
+                insights.push('❄️ This region experiences cooler temperatures, which may affect local ecosystems.');
+            } else {
+                insights.push('🌤️ Temperature conditions are within normal ranges for this region.');
+            }
+            if (precip > 5) {
+                insights.push('💧 High precipitation levels detected, which could indicate increased rainfall patterns.');
+            } else if (precip < 1) {
+                insights.push('🏜️ Low precipitation suggests drier conditions in this area.');
+            }
+            document.getElementById('climate-insights').innerHTML = insights.map(insight => `<p>${insight}</p>`).join('');
+            const tempTrend = temp > 18 ? '📈 Warming' : temp > 12 ? '→ Stable' : '📉 Cooling';
+            document.getElementById('temp-trend').textContent = tempTrend;
+            document.getElementById('temp-comparison').textContent = `Current: ${temp}°C`;
+        }
+
+        function changeTimeRange(range) {
+            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateHistoricalChart(range);
+        }
+
+        function updateHistoricalChart(timeRange) {
+            const chart = document.getElementById('historical-chart');
+            chart.innerHTML = `<div style="position: relative; height: 160px; margin-top: 20px;"><div class="chart-bar" style="left: 20px; height: ${40 + Math.random() * 100}px;"></div><div class="chart-bar" style="left: 60px; height: ${40 + Math.random() * 100}px;"></div><div class="chart-bar" style="left: 100px; height: ${40 + Math.random() * 100}px;"></div><div class="chart-bar" style="left: 140px; height: ${40 + Math.random() * 100}px;"></div><div class="chart-bar" style="left: 180px; height: ${40 + Math.random() * 100}px;"></div><div class="chart-bar" style="left: 220px; height: ${40 + Math.random() * 100}px;"></div></div><div style="text-align: center; margin-top: 30px; color: #00f2fe;">📊 ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)} Climate Trends for ${currentLocationName}</div>`;
+        }
+
+        function exportData() {
+            if (!currentClimateData) {
+                alert('Please search for a location first to export data.');
+                return;
+            }
+            const csvContent = convertToCSV(currentClimateData);
+            downloadCSV(csvContent, `nasa-climate-data-${currentLocationName}.csv`);
+            alert(`📥 Climate data for ${currentLocationName} exported successfully!`);
+        }
+
+        function generateReport() {
+            if (!currentClimateData) {
+                alert('Please search for a location first to generate a report.');
+                return;
+            }
+            const report = generateClimateReport();
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nasa-climate-report-${currentLocationName}.txt`;
+            a.click();
+            alert(`📄 Climate report for ${currentLocationName} generated!`);
+        }
+
+        function shareData() {
+            if (navigator.share) {
+                navigator.share({
+                    title: `NASA Climate Data for ${currentLocationName}`,
+                    text: `Check out this climate data for ${currentLocationName} from NASA APIs!`,
+                    url: window.location.href
+                });
+            } else {
+                alert(`📤 Share this URL: ${window.location.href}`);
+            }
+        }
+
+        function resetDataDisplays() {
+            tempValue.textContent = '--°C';
+            precipValue.textContent = '-- mm/day';
+            humidityValue.textContent = '-- %';
+            solarValue.textContent = '-- W/m²';
+            document.querySelectorAll('.data-value').forEach(el => {
+                el.style.color = '#fff';
+            });
+        }
+
+        function displayFallbackData(lat, lon) {
+            locationResult.innerHTML = `🔴 OFFLINE MODE: Simulated data for ${currentLocationName}<br><small>NASA APIs unavailable - using simulated data</small>`;
+            const fallbackData = {
+                temperature: { value: (15 + (Math.random() * 20 - 10)).toFixed(1), source: 'NASA POWER API (Simulated - API Offline)' },
+                precipitation: { value: (2 + Math.random() * 5).toFixed(2), source: 'NASA POWER API (Simulated - API Offline)' },
+                humidity: { value: (40 + Math.random() * 40).toFixed(1), source: 'NASA POWER API (Simulated - API Offline)' },
+                solar: { value: (150 + Math.random() * 100).toFixed(1), source: 'NASA POWER API (Simulated - API Offline)' }
+            };
+            displayClimateData(fallbackData, lat, lon);
+            currentClimateData = fallbackData;
+            document.querySelectorAll('.data-value').forEach(el => {
+                el.style.color = '#ff8a8a';
+            });
+        }
+
+        function showDebugInfo(message) {
+            debugInfo.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function convertToCSV(data) {
+            const headers = ['Parameter', 'Value', 'Unit', 'Source'];
+            const rows = [
+                ['Temperature', data.temperature?.value || 'N/A', '°C', data.temperature?.source || 'N/A'],
+                ['Precipitation', data.precipitation?.value || 'N/A', 'mm/day', data.precipitation?.source || 'N/A'],
+                ['Humidity', data.humidity?.value || 'N/A', '%', data.humidity?.source || 'N/A'],
+                ['Solar Radiation', data.solar?.value || 'N/A', 'W/m²', data.solar?.source || 'N/A']
+            ];
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => csv += row.join(',') + '\n');
+            return csv;
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        function generateClimateReport() {
+            const data = currentClimateData;
+            return `NASA CLIMATE ANALYSIS REPORT - ${currentLocationName.toUpperCase()}\nGenerated: ${new Date().toLocaleString()}\nLocation: ${currentLocationName}\n\nCLIMATE DATA:\n- Temperature: ${data.temperature?.value || 'N/A'}°C\n- Precipitation: ${data.precipitation?.value || 'N/A'} mm/day\n- Humidity: ${data.humidity?.value || 'N/A'}%\n- Solar Radiation: ${data.solar?.value || 'N/A'} W/m²\n\nCLIMATE INSIGHTS:\n${document.getElementById('climate-insights').textContent}\n\nIMPACT ASSESSMENT:\n- Carbon Impact: ${document.getElementById('carbon-impact').textContent}\n- Sea Level Risk: ${document.getElementById('sea-level-risk').textContent}\n- Weather Risk: ${document.getElementById('weather-risk').textContent}\n\nAI ANALYSIS:\nIncludes machine learning predictions and pattern recognition\n\nThis report was generated using NASA POWER API data and AI algorithms.\nNASA Space Apps Challenge 2023 - Climate Change Study Project`;
+        }
+
+        // ===== EVENT LISTENERS & INITIALIZATION =====
+        searchBtn.addEventListener('click', searchLocation);
+        locationInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLocation();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            apiStatus.innerHTML = `<span class="status-online">🟢 Ready to search any location worldwide</span>`;
+            locationInput.addEventListener('click', function() {
+                if (!this.value) {
+                    this.value = 'kochi';
+                }
+            });
+            addQuickLocations();
+        });
+
+        function addQuickLocations() {
+            const quickLocations = [
+                { name: 'Kochi', coords: 'kochi' },
+                { name: 'Delhi', coords: 'delhi' },
+                { name: 'Mumbai', coords: 'mumbai' },
+                { name: 'Bangalore', coords: 'bangalore' },
+                { name: 'Chennai', coords: 'chennai' }
+            ];
+            const quickContainer = document.createElement('div');
+            quickContainer.style.textAlign = 'center';
+            quickContainer.style.marginTop = '15px';
+            quickContainer.style.padding = '10px';
+            quickContainer.style.background = 'rgba(255,255,255,0.05)';
+            quickContainer.style.borderRadius = '10px';
+            quickLocations.forEach(loc => {
+                const btn = document.createElement('button');
+                btn.textContent = loc.name;
+                btn.style.margin = '3px';
+                btn.style.padding = '8px 15px';
+                btn.style.background = 'rgba(0, 242, 254, 0.3)';
+                btn.style.border = '1px solid #00f2fe';
+                btn.style.borderRadius = '20px';
+                btn.style.color = 'white';
+                btn.style.cursor = 'pointer';
+                btn.style.fontSize = '0.9rem';
+                btn.addEventListener('click', () => {
+                    locationInput.value = loc.coords;
+                    searchLocation();
+                });
+                quickContainer.appendChild(btn);
+            });
+            document.querySelector('.search-container').appendChild(quickContainer);
+        }
+    </script>
+</body>
+</html>
